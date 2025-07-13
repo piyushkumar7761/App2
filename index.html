@@ -1,0 +1,203 @@
+07.13 17:28
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Kya Hai Mahaul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background : #ccc ;
+      color: #f0f0f0; ;
+    }
+    header {
+    background: rgba(15,15,35,0.85);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      z-index: 10;
+font-family: sans-serif;
+     padding: 5px ;
+      text-align: center ;
+      font-size: 25px;
+    }
+ header h1 { flex-grow: 1; font-size: 1.6rem; color: #ffcc00; font-weight: 700; }
+header img.logo {
+ height:50px; border-radius:10px; padding-left : 2px;
+}
+
+    nav {
+      display: flex;
+      overflow-x: auto;
+background : #f0f0f0; 
+
+      padding: 10px;
+      gap: 10px;
+    }
+    nav button {
+      background : #fff;
+
+      color: #333;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    section {
+      display: none;
+      padding: 20px;
+    }
+    section.active {
+      display: block;
+    }
+    iframe {
+      width: 100%;
+      height: 200px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
+    .desc-box {
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
+    .share-btn {
+      background: #25D366;
+      padding: 10px;
+      border-radius: 30px;
+      font-weight: bold;
+      display: block;
+      width: 200px;
+      text-align: center;
+      margin: 20px auto;
+      color: white;
+      text-decoration: none;
+    }
+    img.thumb {
+      width: 100%;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+
+  <header><b><i><h1>Welcome to Kya Hai Mahaul</h1></i></b>
+
+</header>
+<nav>
+    <button onclick="showSection('home')">Home</button>
+    <button onclick="showSection('video')">Video</button>
+    <button onclick="showSection('short')">Short</button>
+    <button onclick="showSection('desc')">Description</button>
+    <button onclick="showSection('share')">Share</button>
+  </nav>
+
+  <section id="home" class="active">
+    <h2> Latest News</h2>
+    <div id="homeContent"></div>
+  </section>
+
+  <section id="video">
+    <h2> Videos</h2>
+    <div id="videoList"></div>
+  </section>
+
+  <section id="short">
+    <h2> Shorts</h2>
+    <div id="shortList"></div>
+  </section>
+
+  <section id="desc">
+    <h2> Descriptions</h2>
+    <div id="descList"></div>
+  </section>
+
+  <section id="share">
+    <h2> Share this App</h2>
+    <a class="share-btn" onclick="shareApp()"> Share App</a>
+  </section>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBISasRnfZD0Y0UgAZDoTJ2SV2TwvzlDrM",
+      authDomain: "kyahaimahaul-e4551.firebaseapp.com",
+      databaseURL: "https://kyahaimahaul-e4551-default-rtdb.firebaseio.com",
+      projectId: "kyahaimahaul-e4551",
+      storageBucket: "kyahaimahaul-e4551.appspot.com",
+      messagingSenderId: "69916634629",
+      appId: "1:69916634629:web:60cf5433aaed97bf12766c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("mahaulApp");
+
+    // Section show/hide
+    function showSection(id) {
+      document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    // Load Home
+    db.child("home").on("value", snap => {
+      let html = "";
+      const data = snap.val();
+      for (let id in data) {
+        const item = data[id];
+        html = `<img class="thumb" src="${item.thumb}" /><p>${item.news}</p>` + html;
+      }
+      document.getElementById("homeContent").innerHTML = html;
+    });
+
+    // Load Video
+    db.child("video").on("value", snap => {
+      let html = "";
+      const data = snap.val();
+      for (let id in data) {
+        const url = data[id].replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
+        html = `<iframe src="${url}" allowfullscreen></iframe>` + html;
+      }
+      document.getElementById("videoList").innerHTML = html;
+    });
+
+    // Load Shorts
+    db.child("short").on("value", snap => {
+      let html = "";
+      const data = snap.val();
+      for (let id in data) {
+        const url = data[id].replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/");
+        html = `<iframe src="${url}" allowfullscreen></iframe>` + html;
+      }
+      document.getElementById("shortList").innerHTML = html;
+    });
+
+    // Load Descriptions
+    db.child("description").on("value", snap => {
+      let html = "";
+      const data = snap.val();
+      for (let id in data) {
+        html += `<div class="desc-box">${data[id]}</div>`;
+      }
+      document.getElementById("descList").innerHTML = html;
+    });
+
+    // Share
+    function shareApp() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: "Kya Hai Mahaul", url });
+      } else {
+        prompt("Copy this app link:", url);
+      }
+    }
+  </script>
+
+</body>
+</html>

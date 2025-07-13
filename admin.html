@@ -1,0 +1,171 @@
+07.13 14:02
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - Mahaul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      background-image: linear-gradient(to bottom ,   #a1a, #a2a,#a4a 10%,#a10) ;
+      color: #fff;
+      padding: 20px;
+    }
+    input, textarea, button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background: #e50914;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    label {
+      margin-top: 15px;
+      font-weight: bold;
+      display: block;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2> Admin Panel</h2>
+
+  <!-- Home Section -->
+  <label>️ Upload Home Thumbnail</label>
+  <input type="file" id="homeImage" accept="image/*" />
+  <img id="previewImg" style="display:none;" />
+  <label> News Text</label>
+  <textarea id="homeNews" placeholder="Enter news text..."></textarea>
+  <button onclick="uploadImageAndSaveHome()">Add Home Content</button>
+
+  <!-- Video Section -->
+  <label> Video Link (YouTube)</label>
+  <input id="videoUrl" placeholder="https://youtu.be/..." />
+  <button onclick="addVideo()">Add Video</button>
+
+  <!-- Short Section -->
+  <label>️ Short Video Link</label>
+  <input id="shortUrl" placeholder="https://youtube.com/shorts/..." />
+  <button onclick="addShort()">Add Short</button>
+
+  <!-- Description -->
+  <label> Description Text</label>
+  <textarea id="descText" placeholder="Write 1-line description..."></textarea>
+  <button onclick="addDescription()">Add Description</button>
+
+  <script>
+    // ✅ Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBISasRnfZD0Y0UgAZDoTJ2SV2TwvzlDrM",
+      authDomain: "kyahaimahaul-e4551.firebaseapp.com",
+      databaseURL: "https://kyahaimahaul-e4551-default-rtdb.firebaseio.com",
+      projectId: "kyahaimahaul-e4551",
+      storageBucket: "kyahaimahaul-e4551.appspot.com",
+      messagingSenderId: "69916634629",
+      appId: "1:69916634629:web:60cf5433aaed97bf12766c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("mahaulApp");
+    const storage = firebase.storage().ref("homeThumbs");
+
+    // ✅ Upload Image to Firebase Storage & Save Home Entry
+    function uploadImageAndSaveHome() {
+      const file = document.getElementById("homeImage").files[0];
+      const news = document.getElementById("homeNews").value;
+
+      if (!file || !news) {
+        alert("Image aur News dono bharna zaroori hai!");
+        return;
+      }
+
+      const fileName = "thumb_" + Date.now();
+      const uploadTask = storage.child(fileName).put(file);
+
+      uploadTask.on("state_changed", null, err => {
+        alert("❌ Upload failed: " + err);
+      }, () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(url => {
+          db.child("home").push({ thumb: url, news });
+          document.getElementById("previewImg").style.display = "none";
+          document.getElementById("homeNews").value = "";
+          alert("✅ Home content uploaded!");
+        });
+      });
+    }
+
+    // ✅ Video Add
+    function addVideo() {
+      const video = document.getElementById("videoUrl").value;
+      if (video) {
+        db.child("video").push(video);
+        document.getElementById("videoUrl").value = "";
+        alert("✅ Video added!");
+      }
+    }
+
+    // ✅ Short Add - With Embed Conversion
+    function addShort() {
+      const shortUrl = document.getElementById("shortUrl").value;
+      if (shortUrl) {
+        let embedUrl = shortUrl;
+
+        if (shortUrl.includes("shorts/")) {
+          const id = shortUrl.split("shorts/")[1].split("?")[0];
+          embedUrl = "https://www.youtube.com/embed/" + id;
+        } else if (shortUrl.includes("youtu.be/")) {
+          const id = shortUrl.split("youtu.be/")[1].split("?")[0];
+          embedUrl = "https://www.youtube.com/embed/" + id;
+        } else if (shortUrl.includes("watch?v=")) {
+          const id = shortUrl.split("watch?v=")[1].split("&")[0];
+          embedUrl = "https://www.youtube.com/embed/" + id;
+        }
+
+        db.child("short").push(embedUrl);
+        document.getElementById("shortUrl").value = "";
+        alert("✅ Short video added!");
+      }
+    }
+
+    // ✅ Description Add
+    function addDescription() {
+      const text = document.getElementById("descText").value;
+      if (text) {
+        db.child("description").push(text);
+        document.getElementById("descText").value = "";
+        alert("✅ Description added!");
+      }
+    }
+
+    // ✅ Show Image Preview
+    document.getElementById("homeImage").addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = document.getElementById("previewImg");
+          img.src = e.target.result;
+          img.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+
+</body>
+</html>
